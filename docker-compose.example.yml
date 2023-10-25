@@ -1,0 +1,82 @@
+version: '3.7'
+
+services:
+  backend:
+    &backend
+    image: registry.git.smartfactory.ch/kync/kync-backend:latest
+    depends_on:
+      - db
+      - redis
+    links:
+      - db
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - ./data/logs:/app/logs
+      - ./data/media:/app/media
+      - ./data/static:/app/static
+      - ./data/locale:/app/locale
+      - ./data/ssh:/app/.ssh:ro
+      - ./.uwsgi.run:/app/.uwsgi.run
+
+  letsencrypt:
+    # See full documentation: https://github.com/linuxserver/docker-swag
+    image: lscr.io/linuxserver/swag
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-config:/config
+    environment:
+      PUID: 1000
+      PGID: 1000
+      VALIDATION: http
+      # Change the following lines to accommodate your setup
+      # See other settings: https://github.com/linuxserver/docker-swag#parameters
+      TZ: Etc/UTC
+      URL: <your hostname>
+
+  celery_worker:
+    <<: *backend
+    ports: []
+    depends_on:
+      - backend
+      - db
+      - redis
+    entrypoint: "./.docker/wait-for test_db:5432 -- celery -A project worker -l info"
+    healthcheck:
+      disable: true
+
+  celery_beat:
+    <<: *backend
+    ports: []
+    depends_on:
+      - backend
+      - db
+      - redis
+    entrypoint: "./.docker/wait-for db:5432 -- celery -A project beat -l info"
+    healthcheck:
+      disable: true
+
+  db:
+    image: postgres:15-alpine
+    env_file:
+      - env
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432" # Do not expose the port on external networks
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - ./data/redis:/data
+    deploy:
+      mode: global # Do not replicate redis
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s

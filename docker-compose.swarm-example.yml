@@ -1,0 +1,120 @@
+version: '3.7'
+
+services:
+  backend:
+    &backend
+    image: registry.git.smartfactory.ch/kync/kync-backend:latest
+    depends_on:
+      - db
+      - redis
+    links:
+      - db
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - ./data/logs:/app/logs
+      - ./data/media:/app/media
+      - ./data/static:/app/static
+      - ./data/locale:/app/locale
+      - ./data/ssh:/app/.ssh:ro
+      - ./.uwsgi.run:/app/.uwsgi.run
+    deploy:
+      mode: replicated
+      replicas: 2 # To allow updates without interruption of service
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+# The following two services can uncomment if celery is set up correctly
+
+  celery_worker:
+    <<: *backend
+    ports: []
+    depends_on:
+      - backend
+      - db
+      - redis
+    entrypoint: "./.docker/wait-for test_db:5432 -- celery -A project worker -l info"
+    healthcheck:
+      disable: true
+    deploy:
+      mode: replicated
+      replicas: 2 # To allow multiple workers
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  celery_beat:
+    <<: *backend
+    ports: []
+    depends_on:
+      - backend
+      - db
+      - redis
+    entrypoint: "./.docker/wait-for db:5432 -- celery -A project beat -l info"
+    healthcheck:
+      disable: true
+    deploy:
+      mode: global # Only one beat is needed
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  db:
+    image: postgres:15-alpine
+    env_file:
+      - env
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432" # Do not expose the port on external networks
+    deploy:
+      mode: global # Do not replicate the DB
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  backup:
+    # The version (tag) must match with the postgres version in the test_db service
+    image: registry.git.smartfactory.ch/public-containers/backend-backup:15
+    env_file:
+      - backend/.env
+    volumes:
+      - ./data/backups:/backups
+      - ./data/media:/backup-sources/media:ro
+      - ./data/locale:/backup-sources/locale:ro
+    links:
+      - db
+    depends_on:
+      - db
+    environment:
+      - HEALTHCHECK_PORT=443
+    deploy:
+      mode: global # Do not replicate backup container
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - ./data/redis:/data
+    deploy:
+      mode: global # Do not replicate redis
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s

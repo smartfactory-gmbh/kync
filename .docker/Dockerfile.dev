@@ -1,0 +1,29 @@
+FROM python:3.11
+
+WORKDIR /app
+
+# Install Python and Package Libraries
+RUN yes | pip install --no-cache-dir pipenv
+RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean
+RUN apt-get install -y \
+    libffi-dev \
+    libssl-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zlib1g-dev \
+    net-tools \
+    vim \
+    gettext
+
+COPY ./Pipfile ./Pipfile.lock /app/
+
+RUN pipenv install --dev --system
+
+COPY . /app/
+
+# Server
+EXPOSE 8000
+STOPSIGNAL SIGINT
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
