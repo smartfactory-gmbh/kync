@@ -14,7 +14,7 @@ db.sqlite3
 media
 .env.*
 !.env.example
-!.env.gitlab-ci
+!.env.ci
 !.env.dev
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
