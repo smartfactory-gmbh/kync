@@ -13,12 +13,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data/logs:/app/logs
       - ./data/media:/app/media
-      - ./data/static:/app/static
-      - ./data/locale:/app/locale
       - ./data/ssh:/app/.ssh:ro
-      - ./.uwsgi.run:/app/.uwsgi.run
+    restart: unless-stopped
 
   letsencrypt:
     # See full documentation: https://github.com/linuxserver/docker-swag
@@ -36,6 +33,7 @@ services:
       # See other settings: https://github.com/linuxserver/docker-swag#parameters
       TZ: Etc/UTC
       URL: <your hostname>
+    restart: unless-stopped
 
   celery_worker:
     <<: *backend
@@ -44,7 +42,7 @@ services:
       - backend
       - db
       - redis
-    entrypoint: "./.docker/wait-for test_db:5432 -- celery -A project worker -l info"
+    entrypoint: "./.docker/wait-for db:5432 -- celery -A project worker -l info"
     healthcheck:
       disable: true
 
@@ -67,16 +65,11 @@ services:
       - ./data/db:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432" # Do not expose the port on external networks
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     command: ['redis-server', '--appendonly', 'yes']
     volumes:
       - ./data/redis:/data
-    deploy:
-      mode: global # Do not replicate redis
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+    restart: unless-stopped
