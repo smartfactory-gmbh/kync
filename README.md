@@ -40,8 +40,53 @@ To setup and start using Kync, do the following:
 1. Copy the `.env.example` file to `.env`
 2. Copy the `docker-compose.example.yml` file to `docker-compose.yml`
 3. Run `docker-compose up -d`
+4. Setup nginx config (see next section) in `./nginx-config/nginx/site-confs/default`
 4. **IMPORTANT**: go to `http://<your host>/custom_auth/user/1/password/` and change the password
    - The default credentials are `admin@smf.ai:admin`
+
+### Setting up letsencrypt proxy
+
+- In the provided compose file, set your hostname in the `letsencrypt` service config
+- In `./nginx-config/nginx/site-confs/default`, put the config below
+- Restart the proxy: `docker-compose restart letsencrypt`
+
+```nginx
+# https redirection
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-hosname.example; # <------- Change here !
+    return 301 https://$host$request_uri;
+}
+
+# main server block
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    root /config/www;
+    index index.html index.htm index.php;
+
+    server_name your-hostname.example; # <------- Change here !
+
+    # enable subfolder method reverse proxy confs
+    include /config/nginx/proxy-confs/*.subfolder.conf;
+
+    # all ssl related config moved to ssl.conf
+    include /config/nginx/ssl.conf;
+
+    # enable for ldap auth
+    #include /config/nginx/ldap.conf;
+
+    client_max_body_size 0;
+
+    location / {
+        include /config/nginx/proxy.conf;
+        proxy_pass http://test_backend;
+    }
+}
+
+```
 
 ## Contribute
 
