@@ -101,7 +101,7 @@ Prerequisites: docker, docker-compose, pipenv
 For the very first setup, do the following:
 
 1. Install the python dependencies: `pipenv install --dev`
-2. Install the pre-commit hooks: `pipenv run pre-commit install`
+2. Install the pre-commit hooks: `pipenv run pre-commit install && pipenv run pre-commit install --hook-type commit-msg`
 3. Run `docker-compose -f docker-compose.dev.yml up --build -d db redis backend`
 4. Run the migrations `docker-compose -f docker-compose.dev.yml exec backend ./manage.py migrate`
 5. Run the remaining services `docker-compose -f docker-compose.dev.yml up -d`
