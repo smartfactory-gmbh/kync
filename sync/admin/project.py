@@ -19,3 +19,8 @@ class ProjectAdmin(admin.ModelAdmin):
     ]
 
     actions = [sync_remote]
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop("delete_selected", None)
+        return actions

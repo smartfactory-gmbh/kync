@@ -17,7 +17,7 @@ services:
     volumes:
       - .:/app/
     restart: unless-stopped
-    entrypoint: "./manage.py runserver 0.0.0.0:8000"
+    command: "./manage.py runserver 0.0.0.0:8000"
 
   celery_worker:
     <<: *dev_backend
@@ -28,6 +28,7 @@ services:
       - db
       - redis
     entrypoint: "celery -A project worker -l info"
+    command: ""
     restart: unless-stopped
 
   celery_beat:
@@ -39,6 +40,7 @@ services:
       - db
       - redis
     entrypoint: "celery -A project beat -l info"
+    command: ""
     restart: unless-stopped
 
   db:
