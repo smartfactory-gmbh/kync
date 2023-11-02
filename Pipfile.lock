@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "68332312c197687aefc7a9b4b6c77e30970a06cb41fc2438b27e66f93ac482ba"
+            "sha256": "057aa9d16081b80dce877d9a7e82127740951eedf91ba1183eccfbd6e261c561"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -304,12 +304,12 @@
         },
         "paramiko": {
             "hashes": [
-                "sha256:6950faca6819acd3219d4ae694a23c7a87ee38d084f70c1724b0c0dbb8b75769",
-                "sha256:f0caa660e797d9cd10db6fc6ae81e2c9b2767af75c3180fcd0e46158cd368d7f"
+                "sha256:6a3777a961ac86dbef375c5f5b8d50014a1a96d0fd7f054a43bc880134b0ff77",
+                "sha256:b7bc5340a43de4287bbe22fe6de728aa2c22468b2a849615498dd944c2f275eb"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.6'",
-            "version": "==3.1.0"
+            "version": "==3.3.1"
         },
         "prompt-toolkit": {
             "hashes": [
