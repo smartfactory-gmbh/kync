@@ -55,6 +55,7 @@ test-application:
     - pip install -q --upgrade pipenv
     - pipenv install
     - pipenv install --dev
+    - pipenv run pip install safety
     - cp .env.gitlab-ci .env
   script:
     - pipenv run pipenv check

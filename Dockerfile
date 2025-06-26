@@ -11,7 +11,7 @@ WORKDIR /app
 
 # Install Python and Package Libraries
 RUN yes | pip install --no-cache-dir pipenv
-RUN apt-get update && apt-get install -y gcc libpq-dev musl-dev gettext net-tools netcat
+RUN apt-get update && apt-get install -y gcc libpq-dev musl-dev gettext net-tools netcat-traditional
 
 COPY ./Pipfile ./Pipfile.lock /app/
 

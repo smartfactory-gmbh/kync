@@ -9,7 +9,9 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 import sys
+from copy import deepcopy
 
+from django.utils.log import DEFAULT_LOGGING
 import environ
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -222,23 +224,12 @@ SESSION_CACHE_ALIAS = "default"
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 # Logging
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
-        },
-        "file": {
-            "level": "INFO",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": BASE_DIR + "/logs/all.log",
-        },
-    },
-    "root": {"handlers": ["console", "file"], "level": "DEBUG"},
-}
+logging_dict = deepcopy(DEFAULT_LOGGING)
+del logging_dict["handlers"]["mail_admins"]
+del logging_dict["handlers"]["console"]["filters"]
+logging_dict["loggers"]["django"]["handlers"] = ["console"]
+LOGGING = logging_dict
+
 
 # Django debug toolbar
 if DEBUG:
